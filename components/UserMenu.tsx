@@ -6,18 +6,17 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ADMIN_EMAIL } from "@/lib/admin-email";
 
-export default function UserMenu({
-  initialEmail,
-}: {
-  initialEmail: string | null;
-}) {
-  const [email, setEmail] = useState<string | null>(initialEmail);
+export default function UserMenu() {
+  const [email, setEmail] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setEmail(session?.user?.email ?? null);
+    });
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
