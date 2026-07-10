@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({
       title,
-      thumbnail_url: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
+      thumbnail_url: `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`,
       source_domain: "youtube.com",
     });
   }

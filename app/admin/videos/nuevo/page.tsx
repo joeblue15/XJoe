@@ -118,7 +118,14 @@ export default function NewVideoPage() {
 
       {thumbnail && (
         <div style={{ marginBottom: 16 }}>
-          <img src={thumbnail} alt="" style={{ width: 160, borderRadius: 6 }} />
+          <img 
+            src={thumbnail} 
+            alt="" 
+            style={{ width: 160, borderRadius: 6 }} 
+            onError={(e) => {
+              e.currentTarget.src = "/default-thumbnail.png";
+            }}
+          />
           <p className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 6 }}>
             og:site_name → {domain}
           </p>

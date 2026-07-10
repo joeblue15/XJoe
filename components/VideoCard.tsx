@@ -21,11 +21,13 @@ export default function VideoCard({ video }: { video: Video }) {
               const img = e.currentTarget;
               if (img.src.includes("maxresdefault")) {
                 img.src = img.src.replace("maxresdefault", "hqdefault");
+              } else {
+                img.src = "/default-thumbnail.png";
               }
             }}
           />
         ) : (
-          <PlayIcon />
+          <img src="/default-thumbnail.png" alt={video.title} loading="lazy" />
         )}
         <div className="domain-tag">{video.source_domain}</div>
       </div>
