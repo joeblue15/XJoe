@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   try {
@@ -11,22 +10,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
+    const supabase = await createClient();
+    
+    // Convertir file a buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-
-    // Crear directorio public/uploads si no existe
-    const uploadDir = join(process.cwd(), 'public', 'uploads');
-    await mkdir(uploadDir, { recursive: true });
 
     // Generar nombre único
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const filename = uniqueSuffix + '-' + file.name.replace(/[^a-zA-Z0-9.-]/g, '');
-    const filepath = join(uploadDir, filename);
+    
+    // Subir a Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('thumbnails')
+      .upload(filename, buffer, {
+        contentType: file.type,
+        upsert: true
+      });
 
-    await writeFile(filepath, buffer);
+    if (error) {
+      console.error('Supabase upload error:', error);
+      return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    }
 
-    // Retornar URL pública
-    const publicUrl = `/uploads/${filename}`;
+    // Obtener URL pública
+    const { data: { publicUrl } } = supabase.storage
+      .from('thumbnails')
+      .getPublicUrl(filename);
     
     return NextResponse.json({ url: publicUrl });
   } catch (error) {
