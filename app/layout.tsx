@@ -42,8 +42,18 @@ export default async function RootLayout({
               {settings.site_name}
             </Link>
             <SearchBar />
-            <Link href="/admin" className="btn secondary" style={{ fontSize: 12, padding: '4px 12px' }}>
-              Admin
+            <Link 
+              href="/admin" 
+              className="btn secondary" 
+              style={{ 
+                fontSize: 13, 
+                padding: '6px 16px',
+                borderRadius: '8px',
+                fontWeight: 500,
+                whiteSpace: 'nowrap'
+              }}
+            >
+              ⚙️ Admin
             </Link>
           </div>
         </header>
