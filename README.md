@@ -1,3 +1,0 @@
-# XJoe
-
-Proyecto inicial
