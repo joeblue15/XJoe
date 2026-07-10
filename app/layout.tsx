@@ -3,6 +3,7 @@ import Link from "next/link";
 import "./globals.css";
 import { createClient } from "@/lib/supabase/server";
 import SearchBar from "@/components/SearchBar";
+import UserMenu from "@/components/UserMenu";
 import type { SiteSettings } from "@/lib/types";
 
 async function getSiteSettings(): Promise<SiteSettings> {
@@ -29,9 +30,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const settings = await getSiteSettings();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return (
-    <html lang="es">
+    <html lang="es" className="bg-background">
       <body>
         <header className="site-header">
           <div className="header-row">
@@ -39,6 +44,7 @@ export default async function RootLayout({
               {settings.site_name}
             </Link>
             <SearchBar />
+            <UserMenu initialEmail={user?.email ?? null} />
           </div>
         </header>
         {children}
