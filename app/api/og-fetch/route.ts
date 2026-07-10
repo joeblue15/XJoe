@@ -45,9 +45,25 @@ export async function POST(request: NextRequest) {
     } catch {
       // seguimos con título vacío, el admin lo completa a mano
     }
+    
+    // Intentar con maxresdefault primero, si no existe usar hqdefault
+    const maxresThumbnail = `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`;
+    const hqThumbnail = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+    
+    // Verificar si maxresdefault existe
+    let thumbnailUrl = hqThumbnail; // fallback por defecto
+    try {
+      const maxresCheck = await fetch(maxresThumbnail, { method: 'HEAD' });
+      if (maxresCheck.ok) {
+        thumbnailUrl = maxresThumbnail;
+      }
+    } catch {
+      // Si falla, usamos hqdefault
+    }
+    
     return NextResponse.json({
       title,
-      thumbnail_url: `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`,
+      thumbnail_url: thumbnailUrl,
       source_domain: "youtube.com",
     });
   }

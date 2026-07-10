@@ -102,6 +102,18 @@ export default function EditVideoPage() {
           value={video.thumbnail_url ?? ""}
           onChange={(e) => setVideo({ ...video, thumbnail_url: e.target.value })}
         />
+        {video.thumbnail_url && (
+          <div style={{ marginTop: 8 }}>
+            <img 
+              src={video.thumbnail_url} 
+              alt="Thumbnail preview" 
+              style={{ width: 160, borderRadius: 6 }} 
+              onError={(e) => {
+                e.currentTarget.src = "/default-thumbnail.png";
+              }}
+            />
+          </div>
+        )}
       </div>
       <div className="field">
         <label>CATEGORÍA</label>
