@@ -65,16 +65,8 @@ export default async function VideoPage({
       />
 
       <div className="thumb" style={{ borderRadius: 6, marginBottom: 16 }}>
-        {video.thumbnail_url ? (
-          <img 
-            src={video.thumbnail_url} 
-            alt={video.title} 
-            onError={(e) => {
-              e.currentTarget.src = "/default-thumbnail.png";
-            }}
-          />
-        ) : (
-          <img src="/default-thumbnail.png" alt={video.title} />
+        {video.thumbnail_url && (
+          <img src={video.thumbnail_url} alt={video.title} />
         )}
         <div className="domain-tag">{video.source_domain}</div>
       </div>

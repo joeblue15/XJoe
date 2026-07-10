@@ -14,6 +14,8 @@ export default function EditVideoPage() {
   const [video, setVideo] = useState<Video | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [saving, setSaving] = useState(false);
+  const [thumbnailMethod, setThumbnailMethod] = useState<"url" | "upload">("url");
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     supabase
@@ -52,6 +54,31 @@ export default function EditVideoPage() {
     }).catch(() => {});
 
     router.push("/admin");
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!res.ok) throw new Error('Error al subir imagen');
+      
+      const data = await res.json();
+      setVideo({ ...video, thumbnail_url: data.url });
+    } catch (error) {
+      alert('Error al subir la imagen');
+    } finally {
+      setUploading(false);
+    }
   }
 
   if (!video) {
@@ -96,25 +123,60 @@ export default function EditVideoPage() {
         />
       </div>
       <div className="field">
-        <label>THUMBNAIL</label>
-        <input
-          type="text"
-          value={video.thumbnail_url ?? ""}
-          onChange={(e) => setVideo({ ...video, thumbnail_url: e.target.value })}
-        />
-        {video.thumbnail_url && (
-          <div style={{ marginTop: 8 }}>
-            <img 
-              src={video.thumbnail_url} 
-              alt="Thumbnail preview" 
-              style={{ width: 160, borderRadius: 6 }} 
-              onError={(e) => {
-                e.currentTarget.src = "/default-thumbnail.png";
-              }}
-            />
-          </div>
-        )}
+        <label>MÉTODO DE THUMBNAIL</label>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+          <button 
+            type="button"
+            className={`btn ${thumbnailMethod === 'url' ? '' : 'secondary'}`}
+            onClick={() => setThumbnailMethod('url')}
+            style={{ flex: 1 }}
+          >
+            URL de imagen
+          </button>
+          <button 
+            type="button"
+            className={`btn ${thumbnailMethod === 'upload' ? '' : 'secondary'}`}
+            onClick={() => setThumbnailMethod('upload')}
+            style={{ flex: 1 }}
+          >
+            Subir archivo
+          </button>
+        </div>
       </div>
+
+      {thumbnailMethod === 'url' && (
+        <div className="field">
+          <label>URL DE IMAGEN</label>
+          <input
+            type="text"
+            value={video.thumbnail_url ?? ""}
+            onChange={(e) => setVideo({ ...video, thumbnail_url: e.target.value })}
+          />
+          {video.thumbnail_url && (
+            <div style={{ marginTop: 8 }}>
+              <img src={video.thumbnail_url} alt="Preview" style={{ width: 160, borderRadius: 6 }} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {thumbnailMethod === 'upload' && (
+        <div className="field">
+          <label>SUBIR IMAGEN</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            disabled={uploading}
+          />
+          {uploading && <p style={{ fontSize: 12, color: "var(--text-muted)" }}>Subiendo...</p>}
+          {video.thumbnail_url && (
+            <div style={{ marginTop: 8 }}>
+              <img src={video.thumbnail_url} alt="Uploaded" style={{ width: 160, borderRadius: 6 }} />
+            </div>
+          )}
+        </div>
+      )}
       <div className="field">
         <label>CATEGORÍA</label>
         <select

@@ -17,17 +17,9 @@ export default function VideoCard({ video }: { video: Video }) {
             src={video.thumbnail_url}
             alt={video.title}
             loading="lazy"
-            onError={(e) => {
-              const img = e.currentTarget;
-              if (img.src.includes("maxresdefault")) {
-                img.src = img.src.replace("maxresdefault", "hqdefault");
-              } else {
-                img.src = "/default-thumbnail.png";
-              }
-            }}
           />
         ) : (
-          <img src="/default-thumbnail.png" alt={video.title} loading="lazy" />
+          <PlayIcon />
         )}
         <div className="domain-tag">{video.source_domain}</div>
       </div>

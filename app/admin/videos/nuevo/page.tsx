@@ -25,6 +25,9 @@ export default function NewVideoPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [thumbnail, setThumbnail] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [thumbnailMethod, setThumbnailMethod] = useState<"auto" | "url" | "upload">("auto");
+  const [uploading, setUploading] = useState(false);
   const [domain, setDomain] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [saving, setSaving] = useState(false);
@@ -51,14 +54,41 @@ export default function NewVideoPage() {
       const data = await res.json();
       setTitle(data.title || "");
       setThumbnail(data.thumbnail_url || "");
+      setThumbnailUrl(data.thumbnail_url || "");
       setDomain(data.source_domain || "");
     } finally {
       setFetching(false);
     }
   }
 
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!res.ok) throw new Error('Error al subir imagen');
+      
+      const data = await res.json();
+      setThumbnailUrl(data.url);
+      setThumbnail(data.url);
+    } catch (error) {
+      setToast('Error al subir la imagen');
+    } finally {
+      setUploading(false);
+    }
+  }
+
   const descWordCount = description.trim().split(/\s+/).filter(Boolean).length;
-  const canPublish = title.trim() && descWordCount >= 20 && url.trim() && categoryId;
+  const canPublish = title.trim() && descWordCount >= 20 && url.trim() && categoryId && thumbnailUrl;
 
   async function handlePublish() {
     setSaving(true);
@@ -69,7 +99,7 @@ export default function NewVideoPage() {
       title: title.trim(),
       slug,
       description: description.trim(),
-      thumbnail_url: thumbnail,
+      thumbnail_url: thumbnailUrl,
       source_url: url.trim(),
       source_domain: domain,
       category_id: categoryId,
@@ -116,19 +146,85 @@ export default function NewVideoPage() {
         </div>
       </div>
 
-      {thumbnail && (
-        <div style={{ marginBottom: 16 }}>
-          <img 
-            src={thumbnail} 
-            alt="" 
-            style={{ width: 160, borderRadius: 6 }} 
-            onError={(e) => {
-              e.currentTarget.src = "/default-thumbnail.png";
+      <div className="field">
+        <label>MÉTODO DE THUMBNAIL</label>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+          <button 
+            type="button"
+            className={`btn ${thumbnailMethod === 'auto' ? '' : 'secondary'}`}
+            onClick={() => setThumbnailMethod('auto')}
+            style={{ flex: 1 }}
+          >
+            Automático
+          </button>
+          <button 
+            type="button"
+            className={`btn ${thumbnailMethod === 'url' ? '' : 'secondary'}`}
+            onClick={() => setThumbnailMethod('url')}
+            style={{ flex: 1 }}
+          >
+            URL de imagen
+          </button>
+          <button 
+            type="button"
+            className={`btn ${thumbnailMethod === 'upload' ? '' : 'secondary'}`}
+            onClick={() => setThumbnailMethod('upload')}
+            style={{ flex: 1 }}
+          >
+            Subir archivo
+          </button>
+        </div>
+      </div>
+
+      {thumbnailMethod === 'auto' && (
+        <div className="field">
+          <label>THUMBNAIL AUTOMÁTICO (del video)</label>
+          {thumbnailUrl && (
+            <div style={{ marginBottom: 16 }}>
+              <img src={thumbnailUrl} alt="" style={{ width: 160, borderRadius: 6 }} />
+              <p className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 6 }}>
+                og:site_name → {domain}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {thumbnailMethod === 'url' && (
+        <div className="field">
+          <label>URL DE IMAGEN</label>
+          <input
+            type="text"
+            placeholder="https://ejemplo.com/imagen.jpg"
+            value={thumbnailUrl}
+            onChange={(e) => {
+              setThumbnailUrl(e.target.value);
+              setThumbnail(e.target.value);
             }}
           />
-          <p className="mono" style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 6 }}>
-            og:site_name → {domain}
-          </p>
+          {thumbnailUrl && (
+            <div style={{ marginTop: 8 }}>
+              <img src={thumbnailUrl} alt="Preview" style={{ width: 160, borderRadius: 6 }} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {thumbnailMethod === 'upload' && (
+        <div className="field">
+          <label>SUBIR IMAGEN</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            disabled={uploading}
+          />
+          {uploading && <p style={{ fontSize: 12, color: "var(--text-muted)" }}>Subiendo...</p>}
+          {thumbnailUrl && (
+            <div style={{ marginTop: 8 }}>
+              <img src={thumbnailUrl} alt="Uploaded" style={{ width: 160, borderRadius: 6 }} />
+            </div>
+          )}
         </div>
       )}
 
